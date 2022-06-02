@@ -10,7 +10,8 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
     created_date = db.Column(db.DateTime)
-
+    address = db.Column(db.Text)
+    image = db.Column(db.Text)
 
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -47,6 +48,20 @@ class User(db.Model):
         return cls.query.filter_by(userId=_id).first()
 
 
+    def setFirstName(self, first_name):
+        self.first_name = first_name
+
+    def setLastName(self, last_name):
+        self.last_name = last_name
+
+    def setEmail(self, email):
+        self.email = email
+
+    def setAddress(self, address):
+        self.address = address 
+
+    def setImage(self, image):
+        self.image = image 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -60,6 +75,6 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
 
 if __name__ == "__main__":
     print("Creating database tables...")
-    # db.drop_all()
+    db.drop_all()
     db.create_all()
     print("Done!")
