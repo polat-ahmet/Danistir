@@ -36,6 +36,12 @@ class Login(Resource):
 
 
 class Profile(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('first_name')
+    parser.add_argument('last_name')
+    #parser.add_argument('email')
+    parser.add_argument('address')
+    parser.add_argument('image')
 
     @jwt_required()
     def get(self):
@@ -44,6 +50,28 @@ class Profile(Resource):
         user_schema = UserSchema()
         output = user_schema.dump(user)
         return jsonify(output)
+
+
+    @jwt_required()
+    def put(self):
+        data = Profile.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+        if data["first_name"]:
+            user.setFirstName(data["first_name"])
+        if data["last_name"]:
+            user.setLastName(data["last_name"])
+        if data["address"]:
+            user.setAddress(data["address"])
+        if data["image"]:
+            user.setImage(data["image"])
+        #user.setEmail(data["email"])
+    
+        user.commit()
+        return {'message':  'Profile changes updated'}, 200
+
+
+
 
 
 #change password
