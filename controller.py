@@ -72,8 +72,6 @@ class Profile(Resource):
 
 
 
-
-
 #change password
 class PasswordChange(Resource):
     parser = reqparse.RequestParser()
@@ -91,3 +89,5 @@ class PasswordChange(Resource):
         user.hash_password(data['new_password'])
         user.commit()
         return {'message':  'Password changed successfully'}, 200        
+
+

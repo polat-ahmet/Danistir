@@ -1,5 +1,13 @@
+from email.policy import default
 from app import db, ma
 from marshmallow import fields
+
+class ConsultantInfo(db.Model):
+    consultantInfoId = db.Column(db.Integer, primary_key=True)
+    biography = db.Column(db.Text)
+    average_rating = db.Column(db.Float, default=0)
+    total_review = db.Column(db.Integer, default=0)
+    consultant_id = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
 
 
 
@@ -16,6 +24,8 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     is_consultant = db.Column(db.Boolean, default=False)
+
+    consultant_info = db.relationship("ConsultantInfo", backref=db.backref('consultant'), uselist=False)
 
     def save_to_db(self):
         db.session.add(self)
@@ -63,12 +73,19 @@ class User(db.Model):
     def setImage(self, image):
         self.image = image 
 
+    # TODO
+    def setConsultantInfo(self, consultant_info):
+        self.consultant_info =consultant_info
+
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
         include_relationships = True
         load_instance = True
         exclude = ("password","created_date")
+
+
+
 
 
 
