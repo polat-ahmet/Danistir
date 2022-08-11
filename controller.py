@@ -90,4 +90,45 @@ class PasswordChange(Resource):
         user.commit()
         return {'message':  'Password changed successfully'}, 200        
 
+class ConsultantInfoController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('biography')
+    parser.add_argument('average_rating')
+    parser.add_argument('total_review')
 
+    @jwt_required()
+    def post(self):
+        data = ConsultantInfoController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        #eger user danışmansa
+        if user.is_consultant:
+            #userın consultant infosu daha önce oluşturulmadıysa yeniden oluştur
+            if not user.consultant_info:
+                consultant_info = ConsultantInfo(**data,consultant=user)
+                consultant_info.save_to_db()
+                
+            #user consultant info varsa, editleme
+            else:
+                print("cons var")
+                print(user.consultant_info.biography)
+                print("cons var")
+
+                if data["biography"]:
+                    user.consultant_info.setBiography(data["biography"])
+                if data["average_rating"]:
+                    user.consultant_info.setAverageRating(data["average_rating"])
+                if data["total_review"]:
+                    user.consultant_info.setTotalReview(data["total_review"])
+
+                user.commit()
+
+    @jwt_required()
+    def get(self):
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        consultant_info_schema = ConsultantInfoSchema()
+        output = consultant_info_schema.dump(user.consultant_info)
+        return jsonify(output)

@@ -1,14 +1,34 @@
 from email.policy import default
 from app import db, ma
 from marshmallow import fields
+from marshmallow_sqlalchemy.fields import Nested
 
 class ConsultantInfo(db.Model):
     consultantInfoId = db.Column(db.Integer, primary_key=True)
     biography = db.Column(db.Text)
     average_rating = db.Column(db.Float, default=0)
     total_review = db.Column(db.Integer, default=0)
-    consultant_id = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
+    consultant_id = db.Column(db.Integer, db.ForeignKey('user.userId'), unique=True)
 
+    def commit(self):
+        db.session.commit()
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def setBiography(self, bio):
+        self.biography = bio
+    
+    def setAverageRating(self, av_rat):
+        self.average_rating = av_rat
+    
+    def setTotalReview(self, tot_rev):
+        self.total_review = tot_rev
 
 
 class User(db.Model):
@@ -25,7 +45,7 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_consultant = db.Column(db.Boolean, default=False)
 
-    consultant_info = db.relationship("ConsultantInfo", backref=db.backref('consultant'), uselist=False)
+    consultant_info = db.relationship("ConsultantInfo", backref='consultant', uselist=False)
 
     def save_to_db(self):
         db.session.add(self)
@@ -77,6 +97,14 @@ class User(db.Model):
     def setConsultantInfo(self, consultant_info):
         self.consultant_info =consultant_info
 
+
+class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = ConsultantInfo
+        include_relationships = True
+        load_instance = True
+
+
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
@@ -84,7 +112,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         exclude = ("password","created_date")
 
-
+    consultant_info = Nested(ConsultantInfoSchema)
 
 
 
