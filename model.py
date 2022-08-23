@@ -1,14 +1,61 @@
 from email.policy import default
-from app import db, ma
+from app import db
 from marshmallow import fields
 from marshmallow_sqlalchemy.fields import Nested
+
+
+
+class ConsultantArea(db.Model):
+    consultantAreaId = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    subAreas = db.relationship('ConsultantSubArea', backref='area', lazy=True)
+
+    def commit(self):
+        db.session.commit()
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+class ConsultantSubArea(db.Model):
+    consultantSubAreaId = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    areaId = db.Column(db.Integer, db.ForeignKey('consultant_area.consultantAreaId'),
+        nullable=False)
+
+    def commit(self):
+        db.session.commit()
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+
+
+
+consultantProvideSubArea = db.Table('consultant_provide_sub_area',
+    db.Column('consultantInfoId', db.Integer, db.ForeignKey('consultant_info.consultantInfoId'), primary_key=True),
+    db.Column('ConsultantSubAreaId', db.Integer, db.ForeignKey('consultant_sub_area.consultantSubAreaId'), primary_key=True)
+)
 
 class ConsultantInfo(db.Model):
     consultantInfoId = db.Column(db.Integer, primary_key=True)
     biography = db.Column(db.Text)
     average_rating = db.Column(db.Float, default=0)
     total_review = db.Column(db.Integer, default=0)
+
     consultant_id = db.Column(db.Integer, db.ForeignKey('user.userId'), unique=True)
+    subAreas = db.relationship('ConsultantSubArea', secondary=consultantProvideSubArea, lazy='subquery',
+        backref=db.backref('consultants', lazy=True))
+
 
     def commit(self):
         db.session.commit()
@@ -29,6 +76,7 @@ class ConsultantInfo(db.Model):
     
     def setTotalReview(self, tot_rev):
         self.total_review = tot_rev
+
 
 
 class User(db.Model):
@@ -98,28 +146,8 @@ class User(db.Model):
         self.consultant_info =consultant_info
 
 
-class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = ConsultantInfo
-        include_relationships = True
-        load_instance = True
-
-
-class UserSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = User
-        include_relationships = True
-        load_instance = True
-        exclude = ("password","created_date")
-
-    consultant_info = Nested(ConsultantInfoSchema)
-
-
-
-
-
 if __name__ == "__main__":
-    print("Creating database tables...")
+    print("********************* *-------------- Creating database tables...")
     db.drop_all()
     db.create_all()
     print("Done!")

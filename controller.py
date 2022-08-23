@@ -3,6 +3,7 @@ from flask import jsonify
 from model import *
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import json
+from serializer import *
 
 
 
@@ -96,6 +97,7 @@ class ConsultantInfoController(Resource):
     parser.add_argument('average_rating')
     parser.add_argument('total_review')
 
+    # TODO response dön
     @jwt_required()
     def post(self):
         data = ConsultantInfoController.parser.parse_args()

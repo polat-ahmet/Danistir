@@ -28,16 +28,17 @@ def addRoutes():
     api.add_resource(Login, "/login") #POST ,parameters: email, password ; return: message, access_token (if success)
     api.add_resource(Profile, "/profile") #token required (must be logged-in) | GET, ; return: email, repos[]
     api.add_resource(PasswordChange, "/password") #token required (must be logged-in) | PATCH (change password logged-in user's), paramaters: old_password, new_password ; return: message
-    api.add_resource(ConsultantInfoController, "/consultant")
+    api.add_resource(ConsultantInfoController, "/consultant") #
 
 
 # if __name__ == '__main__':
-addRoutes()
+# addRoutes()
 
 api.init_app(app)
 jwt.init_app(app)
 ma.init_app(app)
 
 CORS(app)
+
     
     # app.run(debug=True)
