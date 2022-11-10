@@ -4,7 +4,6 @@ from marshmallow import fields
 from marshmallow_sqlalchemy.fields import Nested
 
 
-
 class ConsultantArea(db.Model):
     consultantAreaId = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
@@ -37,8 +36,6 @@ class ConsultantSubArea(db.Model):
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
-
-
 
 
 consultantProvideSubArea = db.Table('consultant_provide_sub_area',
