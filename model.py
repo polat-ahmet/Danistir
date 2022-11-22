@@ -1,5 +1,5 @@
 from email.policy import default
-from app import db
+from app import db, app
 from marshmallow import fields
 from marshmallow_sqlalchemy.fields import Nested
 
@@ -10,15 +10,18 @@ class ConsultantArea(db.Model):
     subAreas = db.relationship('ConsultantSubArea', backref='area', lazy=True)
 
     def commit(self):
-        db.session.commit()
+        with app.app_context():
+            db.session.commit()
 
     def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.add(self)
+            db.session.commit()
 
     def delete_from_db(self):
-        db.session.delete(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.delete(self)
+            db.session.commit()
 
 class ConsultantSubArea(db.Model):
     consultantSubAreaId = db.Column(db.Integer, primary_key=True)
@@ -27,15 +30,18 @@ class ConsultantSubArea(db.Model):
         nullable=False)
 
     def commit(self):
-        db.session.commit()
+        with app.app_context():
+            db.session.commit()
 
     def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.add(self)
+            db.session.commit()
 
     def delete_from_db(self):
-        db.session.delete(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.delete(self)
+            db.session.commit()
 
 
 consultantProvideSubArea = db.Table('consultant_provide_sub_area',
@@ -55,15 +61,18 @@ class ConsultantInfo(db.Model):
 
 
     def commit(self):
-        db.session.commit()
+        with app.app_context():
+            db.session.commit()
 
     def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.add(self)
+            db.session.commit()
 
     def delete_from_db(self):
-        db.session.delete(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.delete(self)
+            db.session.commit()
 
     def setBiography(self, bio):
         self.biography = bio
@@ -93,12 +102,14 @@ class User(db.Model):
     consultant_info = db.relationship("ConsultantInfo", backref='consultant', uselist=False)
 
     def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.add(self)    
+            db.session.commit()
 
     def delete_from_db(self):
-        db.session.delete(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.delete(self)
+            db.session.commit()
 
     def hash_password(self, password):
         self.password = password
@@ -112,15 +123,20 @@ class User(db.Model):
         # return pwd_context.verify(password, self.password)
 
     def commit(self):
-        db.session.commit()
+        with app.app_context():
+            db.session.commit()
 
     @classmethod
     def find_by_email(cls, email):
-        return cls.query.filter_by(email=email).first()
+        with app.app_context():
+            result = cls.query.filter_by(email=email).first()
+        return result
 
     @classmethod
     def find_by_id(cls, _id):
-        return cls.query.filter_by(userId=_id).first()
+        with app.app_context():
+            result = cls.query.filter_by(userId=_id).first()
+        return result
 
 
     def setFirstName(self, first_name):
@@ -145,6 +161,7 @@ class User(db.Model):
 
 if __name__ == "__main__":
     print("********************* *-------------- Creating database tables...")
-    db.drop_all()
-    db.create_all()
-    print("Done!")
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        print("Done!")
