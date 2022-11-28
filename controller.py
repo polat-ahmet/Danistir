@@ -134,3 +134,24 @@ class ConsultantInfoController(Resource):
         consultant_info_schema = ConsultantInfoSchema()
         output = consultant_info_schema.dump(user.consultant_info)
         return jsonify(output)
+
+
+#consultant area ekleme sadece admin ekleyebilir
+class ConsultantAreaAddController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('name', type=str, help="Consultant Area Name required", required=True)
+
+    @jwt_required()
+    def post(self):
+        data = ConsultantAreaAddController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        #eger user adminse
+        if user.is_admin:
+            if ConsultantArea.find_by_name(data['name']):
+                return {'message': 'Consultant Area has already been added'}, 400
+            consultantArea = ConsultantArea(**data)
+            consultantArea.save_to_db()
+            return {'message':  'Consultant Area has been added successfully'}, 201
+        return {'message': 'Only Admin can added'}, 401

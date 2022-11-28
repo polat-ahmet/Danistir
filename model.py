@@ -23,6 +23,12 @@ class ConsultantArea(db.Model):
             db.session.delete(self)
             db.session.commit()
 
+    @classmethod
+    def find_by_name(cls, name):
+        with app.app_context():
+            result = cls.query.filter_by(name=name).first()
+        return result
+
 class ConsultantSubArea(db.Model):
     consultantSubAreaId = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
