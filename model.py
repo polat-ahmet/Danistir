@@ -6,8 +6,8 @@ from marshmallow_sqlalchemy.fields import Nested
 
 class ConsultantArea(db.Model):
     consultantAreaId = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-    subAreas = db.relationship('ConsultantSubArea', backref='area', lazy=True)
+    name = db.Column(db.String(255), unique=True)
+    subAreas = db.relationship('ConsultantSubArea', backref='area', lazy='subquery')
 
     def commit(self):
         with app.app_context():
@@ -31,7 +31,7 @@ class ConsultantArea(db.Model):
 
 class ConsultantSubArea(db.Model):
     consultantSubAreaId = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
+    name = db.Column(db.String(255), unique=True)
     areaId = db.Column(db.Integer, db.ForeignKey('consultant_area.consultantAreaId'),
         nullable=False)
 
@@ -49,6 +49,12 @@ class ConsultantSubArea(db.Model):
             db.session.delete(self)
             db.session.commit()
 
+    @classmethod
+    def find_by_name(cls, name):
+        with app.app_context():
+            result = cls.query.filter_by(name=name).first()
+        return result
+
 
 consultantProvideSubArea = db.Table('consultant_provide_sub_area',
     db.Column('consultantInfoId', db.Integer, db.ForeignKey('consultant_info.consultantInfoId'), primary_key=True),
@@ -62,8 +68,8 @@ class ConsultantInfo(db.Model):
     total_review = db.Column(db.Integer, default=0)
 
     consultant_id = db.Column(db.Integer, db.ForeignKey('user.userId'), unique=True)
-    subAreas = db.relationship('ConsultantSubArea', secondary=consultantProvideSubArea, lazy='subquery',
-        backref=db.backref('consultants', lazy=True))
+    provideSubAreas = db.relationship('ConsultantSubArea', secondary=consultantProvideSubArea, lazy='subquery',
+        backref=db.backref('consultants', lazy='subquery'))
 
 
     def commit(self):
@@ -105,7 +111,7 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_consultant = db.Column(db.Boolean, default=False)
 
-    consultant_info = db.relationship("ConsultantInfo", backref='consultant', uselist=False)
+    consultant_info = db.relationship("ConsultantInfo", backref='consultant', uselist=False, lazy='subquery')
 
     def save_to_db(self):
         with app.app_context():

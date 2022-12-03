@@ -123,17 +123,20 @@ class ConsultantInfoController(Resource):
                     user.consultant_info.setAverageRating(data["average_rating"])
                 if data["total_review"]:
                     user.consultant_info.setTotalReview(data["total_review"])
-
-                user.commit()
+            user.commit()
+            return {'message': 'Consultant info succesfully changed'}, 200
+        return {'message': 'You are not consultant'}, 401
 
     @jwt_required()
     def get(self):
         current_user = get_jwt_identity()
         user = User.find_by_email(current_user)
 
-        consultant_info_schema = ConsultantInfoSchema()
-        output = consultant_info_schema.dump(user.consultant_info)
-        return jsonify(output)
+        if user.is_consultant:
+            consultant_info_schema = ConsultantInfoSchema()
+            output = consultant_info_schema.dump(user.consultant_info)
+            return jsonify(output)
+        return {'message': 'You are not consultant'}, 401
 
 
 #consultant area ekleme sadece admin ekleyebilir
@@ -154,4 +157,30 @@ class ConsultantAreaAddController(Resource):
             consultantArea = ConsultantArea(**data)
             consultantArea.save_to_db()
             return {'message':  'Consultant Area has been added successfully'}, 201
-        return {'message': 'Only Admin can added'}, 401
+        return {'message': 'Only Admin can add'}, 401
+
+
+#consultant Subarea ekleme sadece admin ekleyebilir
+class ConsultantSubAreaAddController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('name', type=str, help="Consultant SubArea Name required", required=True)
+    parser.add_argument('area_name', type=str, help="Consultant Area Name required", required=True)
+
+    @jwt_required()
+    def post(self):
+        data = ConsultantSubAreaAddController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        #eger user adminse
+        if user.is_admin:
+            if ConsultantSubArea.find_by_name(data['name']):
+                return {'message': 'Consultant SubArea has already been added'}, 400
+            consultantArea = ConsultantArea.find_by_name(data['area_name'])
+            if consultantArea:
+                consultantSubArea = ConsultantSubArea(name=data['name'], area=consultantArea)
+                consultantSubArea.save_to_db()
+                return {'message':  'Consultant SubArea has been added successfully'}, 201
+            return {'message': 'Consultant Area Not Found'}, 404
+        return {'message': 'Only Admin can add'}, 401
+

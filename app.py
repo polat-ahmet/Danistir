@@ -23,13 +23,14 @@ db = SQLAlchemy(app)
 
 ## ROUTES ###
 def addRoutes():
-    from controller import UserRegister, Login, Profile, PasswordChange, ConsultantInfoController, ConsultantAreaAddController
+    from controller import UserRegister, Login, Profile, PasswordChange, ConsultantInfoController, ConsultantAreaAddController, ConsultantSubAreaAddController
     api.add_resource(UserRegister, "/register") #POST ,parameters: email, password ; return: message
     api.add_resource(Login, "/login") #POST ,parameters: email, password ; return: message, access_token (if success)
     api.add_resource(Profile, "/profile") #token required (must be logged-in) | GET, ; return: email, repos[]
     api.add_resource(PasswordChange, "/password") #token required (must be logged-in) | PATCH (change password logged-in user's), paramaters: old_password, new_password ; return: message
     api.add_resource(ConsultantInfoController, "/consultant") #
     api.add_resource(ConsultantAreaAddController, "/addconsultantarea")
+    api.add_resource(ConsultantSubAreaAddController, "/addconsultantsubarea")
 
 if __name__ == '__main__':
     addRoutes()
