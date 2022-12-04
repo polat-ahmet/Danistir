@@ -13,6 +13,15 @@ class ConsultantArea(db.Model):
         with app.app_context():
             db.session.commit()
 
+    def merge(self):
+        with app.app_context():
+            db.session.merge(self)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
+
     def save_to_db(self):
         with app.app_context():
             db.session.add(self)
@@ -26,7 +35,9 @@ class ConsultantArea(db.Model):
     @classmethod
     def find_by_name(cls, name):
         with app.app_context():
-            result = cls.query.filter_by(name=name).first()
+            result = db.session.execute(db.select(cls).filter_by(name=name)).scalar()
+            # result = db.session.query(cls).filter_by(name=name).first()
+            # result = cls.query.filter_by(name=name).first()
         return result
 
 class ConsultantSubArea(db.Model):
@@ -39,6 +50,15 @@ class ConsultantSubArea(db.Model):
         with app.app_context():
             db.session.commit()
 
+    def merge(self):
+        with app.app_context():
+            db.session.merge(self)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
+
     def save_to_db(self):
         with app.app_context():
             db.session.add(self)
@@ -52,7 +72,9 @@ class ConsultantSubArea(db.Model):
     @classmethod
     def find_by_name(cls, name):
         with app.app_context():
-            result = cls.query.filter_by(name=name).first()
+            result = db.session.execute(db.select(cls).filter_by(name=name)).scalar()
+            # result = db.session.query(cls).filter_by(name=name).first()
+            # result = cls.query.filter_by(name=name).first()
         return result
 
 
@@ -76,6 +98,15 @@ class ConsultantInfo(db.Model):
         with app.app_context():
             db.session.commit()
 
+    def merge(self):
+        with app.app_context():
+            db.session.merge(self)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
+
     def save_to_db(self):
         with app.app_context():
             db.session.add(self)
@@ -88,6 +119,7 @@ class ConsultantInfo(db.Model):
 
     def setBiography(self, bio):
         self.biography = bio
+        self.commit()
     
     def setAverageRating(self, av_rat):
         self.average_rating = av_rat
@@ -138,21 +170,35 @@ class User(db.Model):
         with app.app_context():
             db.session.commit()
 
+    def merge(self):
+        with app.app_context():
+            db.session.merge(self)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
+
     @classmethod
     def find_by_email(cls, email):
         with app.app_context():
-            result = cls.query.filter_by(email=email).first()
+            # result = db.session.query(cls).filter_by(email=email).first()
+            result = db.session.execute(db.select(cls).filter_by(email=email)).scalar()
+            # result = cls.query.filter_by(email=email).first()
         return result
 
     @classmethod
     def find_by_id(cls, _id):
         with app.app_context():
-            result = cls.query.filter_by(userId=_id).first()
+            result = db.session.query(cls).filter_by(userId=_id).first()
+            # result = cls.query.filter_by(userId=_id).first()
         return result
 
 
     def setFirstName(self, first_name):
-        self.first_name = first_name
+        with app.app_context():
+            self.first_name = first_name
+            db.session.commit()
 
     def setLastName(self, last_name):
         self.last_name = last_name

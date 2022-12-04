@@ -66,9 +66,8 @@ class Profile(Resource):
             user.setAddress(data["address"])
         if data["image"]:
             user.setImage(data["image"])
-        #user.setEmail(data["email"])
     
-        user.commit()
+        user.mergeAndCommit()
         return {'message':  'Profile changes updated'}, 200
 
 
@@ -88,7 +87,7 @@ class PasswordChange(Resource):
         if not user.verify_password(data['old_password']):
             return {'message': 'Currently Password is wrong'}, 404
         user.hash_password(data['new_password'])
-        user.commit()
+        user.mergeAndCommit()
         return {'message':  'Password changed successfully'}, 200        
 
 class ConsultantInfoController(Resource):
@@ -113,17 +112,13 @@ class ConsultantInfoController(Resource):
                 
             #user consultant info varsa, editleme
             else:
-                print("cons var")
-                print(user.consultant_info.biography)
-                print("cons var")
-
                 if data["biography"]:
                     user.consultant_info.setBiography(data["biography"])
                 if data["average_rating"]:
                     user.consultant_info.setAverageRating(data["average_rating"])
                 if data["total_review"]:
                     user.consultant_info.setTotalReview(data["total_review"])
-            user.commit()
+                user.mergeAndCommit()
             return {'message': 'Consultant info succesfully changed'}, 200
         return {'message': 'You are not consultant'}, 401
 
@@ -154,7 +149,7 @@ class ConsultantAreaAddController(Resource):
         if user.is_admin:
             if ConsultantArea.find_by_name(data['name']):
                 return {'message': 'Consultant Area has already been added'}, 400
-            consultantArea = ConsultantArea(**data)
+            consultantArea = ConsultantArea(name=data['name'])
             consultantArea.save_to_db()
             return {'message':  'Consultant Area has been added successfully'}, 201
         return {'message': 'Only Admin can add'}, 401
