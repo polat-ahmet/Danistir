@@ -32,7 +32,7 @@ def addRoutes():
 
 
 # if __name__ == '__main__':
-# addRoutes()
+addRoutes()
 
 api.init_app(app)
 jwt.init_app(app)
