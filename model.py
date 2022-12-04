@@ -13,6 +13,10 @@ class ConsultantArea(db.Model):
         with app.app_context():
             db.session.commit()
 
+    def add_to_session(self):
+        with app.app_context():
+            db.session.add(self)
+
     def merge(self):
         with app.app_context():
             db.session.merge(self)
@@ -33,6 +37,14 @@ class ConsultantArea(db.Model):
             db.session.commit()
 
     @classmethod
+    def find_by_id(cls, id):
+        with app.app_context():
+            result = db.session.execute(db.select(cls).filter_by(consultantAreaId=id)).scalar()
+            # result = db.session.query(cls).filter_by(name=name).first()
+            # result = cls.query.filter_by(name=name).first()
+        return result
+
+    @classmethod
     def find_by_name(cls, name):
         with app.app_context():
             result = db.session.execute(db.select(cls).filter_by(name=name)).scalar()
@@ -43,8 +55,7 @@ class ConsultantArea(db.Model):
 class ConsultantSubArea(db.Model):
     consultantSubAreaId = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
-    areaId = db.Column(db.Integer, db.ForeignKey('consultant_area.consultantAreaId'),
-        nullable=False)
+    areaId = db.Column(db.Integer, db.ForeignKey('consultant_area.consultantAreaId'))
 
     def commit(self):
         with app.app_context():
@@ -72,7 +83,8 @@ class ConsultantSubArea(db.Model):
     @classmethod
     def find_by_name(cls, name):
         with app.app_context():
-            result = db.session.execute(db.select(cls).filter_by(name=name)).scalar()
+            result = db.session.query(cls).options(db.orm.subqueryload(cls.area)).filter_by(name=name).first()
+            # result = db.session.execute(db.select(cls).filter_by(name=name)).scalar()
             # result = db.session.query(cls).filter_by(name=name).first()
             # result = cls.query.filter_by(name=name).first()
         return result
@@ -220,6 +232,6 @@ class User(db.Model):
 if __name__ == "__main__":
     print("********************* *-------------- Creating database tables...")
     with app.app_context():
-        db.drop_all()
+        # db.drop_all()
         db.create_all()
         print("Done!")

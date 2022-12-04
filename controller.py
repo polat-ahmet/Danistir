@@ -154,12 +154,24 @@ class ConsultantAreaAddController(Resource):
             return {'message':  'Consultant Area has been added successfully'}, 201
         return {'message': 'Only Admin can add'}, 401
 
+    @jwt_required()
+    def get(self):
+        data = ConsultantAreaAddController.parser.parse_args()
+        consultantArea = ConsultantArea.find_by_name(data['name'])
+        if consultantArea:
+            print(consultantArea.subAreas)
+            consultantSubAreaSchema = ConsultantAreaSchema()
+            output = consultantSubAreaSchema.dump(consultantArea)
+            return jsonify(output)
+        return {'message': 'Consultant Area Not Found'}, 404
 
 #consultant Subarea ekleme sadece admin ekleyebilir
 class ConsultantSubAreaAddController(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('name', type=str, help="Consultant SubArea Name required", required=True)
     parser.add_argument('area_name', type=str, help="Consultant Area Name required", required=True)
+    getParser = reqparse.RequestParser()
+    getParser.add_argument('name', type=str, help="Consultant SubArea Name required", required=True)
 
     @jwt_required()
     def post(self):
@@ -174,8 +186,38 @@ class ConsultantSubAreaAddController(Resource):
             consultantArea = ConsultantArea.find_by_name(data['area_name'])
             if consultantArea:
                 consultantSubArea = ConsultantSubArea(name=data['name'], area=consultantArea)
+                ##
+                print("-------")
+                print(consultantSubArea.area)
+                print(consultantArea.subAreas)
+                # consultantArea.merge()
+                # consultantSubArea.merge()
+                # consultantSubArea.area.merge()
+                # consultantArea.add_to_session()
                 consultantSubArea.save_to_db()
+                # consultantArea.save_to_db()
                 return {'message':  'Consultant SubArea has been added successfully'}, 201
-            return {'message': 'Consultant Area Not Found'}, 404
+            return {'message': 'Consultant SubArea Not Found'}, 404
         return {'message': 'Only Admin can add'}, 401
+
+    @jwt_required()
+    def get(self):
+        data = ConsultantSubAreaAddController.parser.parse_args()
+        consultantSubArea = ConsultantSubArea.find_by_name(data['name'])
+        print("----++++---")
+        print(consultantSubArea)
+        if consultantSubArea:
+            print("-------")
+            print(consultantSubArea.name)
+            print(consultantSubArea.areaId)
+            print(consultantSubArea.area)
+            consultantSubAreaSchema = ConsultantSubAreaSchema()
+            output = consultantSubAreaSchema.dump(consultantSubArea)
+            consultantArea = ConsultantArea.find_by_id(consultantSubArea.areaId)
+            print(consultantArea.name)
+            # return {'message': 'debug'}, 400
+            # return jsonify(output)
+            return {'message': output}, 200
+        return {'message': 'Consultant SubArea Not Found'}, 404
+
 

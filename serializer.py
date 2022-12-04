@@ -6,7 +6,7 @@ from marshmallow_sqlalchemy.fields import Nested
 class ConsultantAreaSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = ConsultantArea
-        include_relationships = True
+        # include_relationships = True
         load_instance = True
       
     # subAreas = Nested(ConsultantSubAreaSchema, many=True) 
@@ -18,7 +18,7 @@ class ConsultantSubAreaSchema(ma.SQLAlchemyAutoSchema):
         # include_relationships = True
         load_instance = True
       
-    # consultants = Nested(ConsultantSubAreaSchema, many=True)
+    area = Nested(ConsultantAreaSchema)
 
 class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -33,7 +33,6 @@ class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
-        include_relationships = True
         load_instance = True
         exclude = ("password","created_date")
 
