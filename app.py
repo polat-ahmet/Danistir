@@ -33,14 +33,14 @@ def addRoutes():
     api.add_resource(ConsultantSubAreaAddController, "/addconsultantsubarea") 
     api.add_resource(ConsultantWorkTimeController, "/consultantworktime")
 
-if __name__ == '__main__':
-    addRoutes()
+# if __name__ == '__main__':
+addRoutes()
 
-    api.init_app(app)
-    jwt.init_app(app)
-    ma.init_app(app)
+api.init_app(app)
+jwt.init_app(app)
+ma.init_app(app)
 
-    CORS(app)
+CORS(app)
 
     
-    app.run(debug=True)
+    # app.run(debug=True)
