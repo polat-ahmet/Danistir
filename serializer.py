@@ -1,6 +1,7 @@
 from model import *
 from app import ma
 from marshmallow_sqlalchemy.fields import Nested
+from marshmallow import Schema, fields
 
 
 class ConsultantAreaSchema(ma.SQLAlchemyAutoSchema):
@@ -37,3 +38,13 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         exclude = ("password","created_date")
 
     consultant_info = Nested(ConsultantInfoSchema)
+
+
+class ConsultantWorkingTimesSchema(Schema):
+    day = fields.Int()
+    startHour = fields.Int()
+    startMin = fields.Int()
+    endHour = fields.Int()
+    endMin = fields.Int()
+    # class Meta:
+    #     fields = ('day', 'startHour', 'startMin', 'endHour', 'endMin')

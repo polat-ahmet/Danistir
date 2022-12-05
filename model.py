@@ -13,7 +13,7 @@ class ConsultantArea(db.Model):
         with app.app_context():
             db.session.commit()
 
-    def add_to_session(self):
+    def addToSession(self):
         with app.app_context():
             db.session.add(self)
 
@@ -95,6 +95,61 @@ consultantProvideSubArea = db.Table('consultant_provide_sub_area',
     db.Column('ConsultantSubAreaId', db.Integer, db.ForeignKey('consultant_sub_area.consultantSubAreaId'), primary_key=True)
 )
 
+class ConsultantWorkingTimes(db.Model):
+    consultantWorkingTimesId = db.Column(db.Integer, primary_key=True)
+    day = db.Column(db.Integer, db.CheckConstraint('day >= 0 AND day < 7'))
+    startHour = db.Column(db.Integer)
+    endHour = db.Column(db.Integer)
+    startMin = db.Column(db.Integer)
+    endMin = db.Column(db.Integer)
+
+    consultantInfoId = db.Column(db.Integer, db.ForeignKey('consultant_info.consultantInfoId'), nullable=False)
+
+
+    def commit(self):
+        with app.app_context():
+            db.session.commit()
+
+    def addToSession(self):
+        with app.app_context():
+            db.session.add(self)
+
+    def merge(self):
+        with app.app_context():
+            db.session.merge(self)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
+
+    def save_to_db(self):
+        with app.app_context():
+            db.session.add(self)
+            db.session.commit()
+
+    def delete_from_db(self):
+        with app.app_context():
+            db.session.delete(self)
+            db.session.commit()
+
+    @classmethod
+    def find_by_id(cls, id):
+        with app.app_context():
+            result = db.session.execute(db.select(cls).filter_by(consultantWorkingTimesId=id)).scalar()
+            # result = db.session.query(cls).filter_by(name=name).first()
+            # result = cls.query.filter_by(name=name).first()
+        return result
+
+    @classmethod
+    def find_by_consultant_id(cls, id):
+        with app.app_context():
+            result = db.session.query(cls).filter_by(consultantInfoId=id).all()
+            # result = db.session.execute(db.select(cls).filter_by(consultantInfoId=id)).scalars()
+            # result = db.session.query(cls).filter_by(name=name).first()
+            # result = cls.query.filter_by(name=name).first()
+        return result
+
 class ConsultantInfo(db.Model):
     consultantInfoId = db.Column(db.Integer, primary_key=True)
     biography = db.Column(db.Text)
@@ -104,6 +159,8 @@ class ConsultantInfo(db.Model):
     consultant_id = db.Column(db.Integer, db.ForeignKey('user.userId'), unique=True)
     provideSubAreas = db.relationship('ConsultantSubArea', secondary=consultantProvideSubArea, lazy='subquery',
         backref=db.backref('consultants', lazy='subquery'))
+    
+    workingTimes = db.relationship("ConsultantWorkingTimes", backref='consultantInfo', lazy='subquery')
 
 
     def commit(self):
@@ -233,5 +290,6 @@ if __name__ == "__main__":
     print("********************* *-------------- Creating database tables...")
     with app.app_context():
         # db.drop_all()
+        # ConsultantWorkingTimes.__table__.drop(db.engine)
         db.create_all()
         print("Done!")

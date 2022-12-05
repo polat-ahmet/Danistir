@@ -193,7 +193,6 @@ class ConsultantSubAreaAddController(Resource):
                 # consultantArea.merge()
                 # consultantSubArea.merge()
                 # consultantSubArea.area.merge()
-                # consultantArea.add_to_session()
                 consultantSubArea.save_to_db()
                 # consultantArea.save_to_db()
                 return {'message':  'Consultant SubArea has been added successfully'}, 201
@@ -220,4 +219,44 @@ class ConsultantSubAreaAddController(Resource):
             return {'message': output}, 200
         return {'message': 'Consultant SubArea Not Found'}, 404
 
+
+#consultant çalıştığı saatleri ayarlama
+class ConsultantWorkTimeController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('time', type=dict, help="required", required=True, action='append')
+
+    @jwt_required()
+    def post(self):
+        data = ConsultantWorkTimeController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        if user.is_consultant:
+            times = data["time"]            
+            for element in times:
+                consultantWorkingTimesSchema = ConsultantWorkingTimesSchema()
+                output = consultantWorkingTimesSchema.load(element)
+                # print(output)
+                consultantWorking = ConsultantWorkingTimes(**output, consultantInfo=user.consultant_info)
+                consultantWorking.save_to_db()
+            
+            return {'message': 'Consultant Working Times Successfully Created'}, 201
+
+        return {'message': 'You are not consultant'}, 401
+
+    @jwt_required()
+    def get(self):
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        if user.is_consultant:
+            print(user.consultant_info.consultantInfoId)
+            workingTimes = ConsultantWorkingTimes.find_by_consultant_id(user.consultant_info.consultantInfoId)
+            print(workingTimes)
+            consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
+            output = consultantWorkingTimesSchema.dump(workingTimes)
+            print(output)
+            return {'time': output, 'consultantInfoId':user.consultant_info.consultantInfoId}, 200
+
+        return {'message': 'You are not consultant'}, 401
 

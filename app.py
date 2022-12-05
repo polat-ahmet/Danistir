@@ -31,6 +31,7 @@ def addRoutes():
     api.add_resource(ConsultantInfoController, "/consultant") #
     api.add_resource(ConsultantAreaAddController, "/addconsultantarea")
     api.add_resource(ConsultantSubAreaAddController, "/addconsultantsubarea") 
+    api.add_resource(ConsultantWorkTimeController, "/consultantworktime")
 
 if __name__ == '__main__':
     addRoutes()
