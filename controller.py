@@ -4,6 +4,7 @@ from model import *
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import json
 from serializer import *
+import datetime
 
 
 
@@ -203,17 +204,17 @@ class ConsultantSubAreaAddController(Resource):
     def get(self):
         data = ConsultantSubAreaAddController.parser.parse_args()
         consultantSubArea = ConsultantSubArea.find_by_name(data['name'])
-        print("----++++---")
-        print(consultantSubArea)
+        # print("----++++---")
+        # print(consultantSubArea)
         if consultantSubArea:
-            print("-------")
-            print(consultantSubArea.name)
-            print(consultantSubArea.areaId)
-            print(consultantSubArea.area)
+            # print("-------")
+            # print(consultantSubArea.name)
+            # print(consultantSubArea.areaId)
+            # print(consultantSubArea.area)
             consultantSubAreaSchema = ConsultantSubAreaSchema()
             output = consultantSubAreaSchema.dump(consultantSubArea)
             consultantArea = ConsultantArea.find_by_id(consultantSubArea.areaId)
-            print(consultantArea.name)
+            # print(consultantArea.name)
             # return {'message': 'debug'}, 400
             # return jsonify(output)
             return {'message': output}, 200
@@ -260,3 +261,29 @@ class ConsultantWorkTimeController(Resource):
 
         return {'message': 'You are not consultant'}, 401
 
+
+#appointment alma 
+class TakeAppointmentController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('userId', type=int, help="UserId required", required=True)
+    parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
+    parser.add_argument('appointmentDate', type=lambda x: datetime.datetime.strptime(x,'%a %b %d %Y %H:%M:%S'), help="appointmentDate required", required=True)
+
+    @jwt_required()
+    def post(self):
+        data = TakeAppointmentController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        if user:
+            print(data["appointmentDate"])
+            appointmentDate = data["appointmentDate"]
+            client = User.find_by_id(data["userId"])
+            consultant = User.find_by_id(data["consultantId"])
+            if client and consultant:
+                appointment = Appointment(consultantUserId=consultant.userId, clientUserId=client.userId, appointmentDate=appointmentDate)
+                appointment.save_to_db()
+                return {'message': 'Appointment successfully take'}, 201
+            return {'message': 'Client or Consultant Not Found'}, 404
+
+        return {'message': 'Error'}, 400
