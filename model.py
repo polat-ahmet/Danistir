@@ -95,6 +95,45 @@ consultantProvideSubArea = db.Table('consultant_provide_sub_area',
     db.Column('ConsultantSubAreaId', db.Integer, db.ForeignKey('consultant_sub_area.consultantSubAreaId'), primary_key=True)
 )
 
+class Appointment(db.Model):
+    appointmentId = db.Column(db.Integer, primary_key=True)
+    consultantUserId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
+    clientUserId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
+    appointmentDate = db.Column(db.DateTime, nullable=False)
+    appointmentTimeInMin = db.Column(db.Integer, db.CheckConstraint('appointmentTimeInMin >= 0'), nullable=False, default=30)
+
+    consultant = db.relationship("User", backref="consultantAppointment", foreign_keys=[consultantUserId])
+    client = db.relationship("User", backref="clientAppointment", foreign_keys=[clientUserId])
+
+    def commit(self):
+        with app.app_context():
+            db.session.commit()
+
+    def addToSession(self):
+        with app.app_context():
+            db.session.add(self)
+
+    def merge(self):
+        with app.app_context():
+            db.session.merge(self)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
+
+    def save_to_db(self):
+        with app.app_context():
+            db.session.add(self)
+            db.session.commit()
+
+    def delete_from_db(self):
+        with app.app_context():
+            db.session.delete(self)
+            db.session.commit()
+
+
+
 class ConsultantWorkingTimes(db.Model):
     consultantWorkingTimesId = db.Column(db.Integer, primary_key=True)
     day = db.Column(db.Integer, db.CheckConstraint('day >= 0 AND day < 7'))
