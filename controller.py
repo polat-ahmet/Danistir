@@ -233,11 +233,12 @@ class ConsultantWorkTimeController(Resource):
         user = User.find_by_email(current_user)
 
         if user.is_consultant:
-            times = data["time"]            
+            times = data["time"]
+            ConsultantWorkingTimes.resetConsultantWorkingTimes(user.consultant_info.consultantInfoId)        
             for element in times:
                 consultantWorkingTimesSchema = ConsultantWorkingTimesSchema()
                 output = consultantWorkingTimesSchema.load(element)
-                # print(output)
+
                 consultantWorking = ConsultantWorkingTimes(**output, consultantInfo=user.consultant_info)
                 consultantWorking.save_to_db()
             
@@ -251,16 +252,25 @@ class ConsultantWorkTimeController(Resource):
         user = User.find_by_email(current_user)
 
         if user.is_consultant:
-            print(user.consultant_info.consultantInfoId)
             workingTimes = ConsultantWorkingTimes.find_by_consultant_id(user.consultant_info.consultantInfoId)
-            print(workingTimes)
             consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
             output = consultantWorkingTimesSchema.dump(workingTimes)
-            print(output)
-            return {'time': output, 'consultantInfoId':user.consultant_info.consultantInfoId}, 200
+            return {'time': output, 'consultantInfoId':user.consultant_info.consultantInfoId, 'userId':user.userId}, 200
 
         return {'message': 'You are not consultant'}, 401
 
+
+class ConsultantFreeTimeController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
+
+    def get(self):
+        data = ConsultantFreeTimeController.parser.parse_args()
+        user = User.find_by_id(data["consultantId"])
+        if user.is_consultant:
+            return {'message': 'Consultant\'s free times'}, 200
+
+        return {'message': 'User is not consultant'}, 401
 
 #appointment alma 
 class TakeAppointmentController(Resource):
@@ -276,12 +286,27 @@ class TakeAppointmentController(Resource):
         user = User.find_by_email(current_user)
 
         if user:
+            #generate agora token
+            from agora_key.RtcTokenBuilder import RtcTokenBuilder, Role_Attendee
+            import time      
+            appID = "651567b3ecc3473e806ec776ae53781a"
+            appCertificate = "4e6c5235d5ee47a2941589c3ea7c945b"
+            channelName = "danistirchannel"
+            uid = 0
+            expireTimeInSeconds = 36000000
+            currentTimestamp = int(time.time())
+            privilegeExpiredTs = currentTimestamp + expireTimeInSeconds
+
+            appointmentToken = RtcTokenBuilder.buildTokenWithUid(appID, appCertificate, channelName, uid, Role_Attendee, privilegeExpiredTs)
+            print("Token with int uid: {}".format(appointmentToken))
+            ##
+            
             print(data["appointmentDate"])
             appointmentDate = data["appointmentDate"]
             client = User.find_by_id(data["userId"])
             consultant = User.find_by_id(data["consultantId"])
             if client and consultant:
-                appointment = Appointment(consultantUserId=consultant.userId, clientUserId=client.userId, appointmentDate=appointmentDate)
+                appointment = Appointment(consultantUserId=consultant.userId, clientUserId=client.userId, appointmentDate=appointmentDate, appointmentToken=appointmentToken)
                 appointment.save_to_db()
                 return {'message': 'Appointment successfully take'}, 201
             return {'message': 'Client or Consultant Not Found'}, 404

@@ -6,6 +6,8 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from datetime import timedelta
 
+import os
+
 api = Api()
 jwt = JWTManager()
 ma = Marshmallow()
@@ -13,8 +15,8 @@ ma = Marshmallow()
 
 app = Flask(__name__)
 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'tmp/db.sqlite3') #'sqlite:///tmp\db.sqlite3' #'postgresql://ctqkjmmn:I6i392cggu_lZmzVlr7mCzcDpKmo4J0N@mouse.db.elephantsql.com/ctqkjmmn' #
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'Danistir secret key' 
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
@@ -23,7 +25,7 @@ db = SQLAlchemy(app)
 
 ## ROUTES ###
 def addRoutes():
-    from controller import UserRegister, Login, Profile, PasswordChange, ConsultantInfoController, ConsultantAreaAddController, ConsultantSubAreaAddController, ConsultantWorkTimeController, TakeAppointmentController
+    from controller import UserRegister, Login, Profile, PasswordChange, ConsultantInfoController, ConsultantAreaAddController, ConsultantSubAreaAddController, ConsultantWorkTimeController, TakeAppointmentController, ConsultantFreeTimeController
     api.add_resource(UserRegister, "/register") #POST ,parameters: email, password ; return: message
     api.add_resource(Login, "/login") #POST ,parameters: email, password ; return: message, access_token (if success)
     api.add_resource(Profile, "/profile") #token required (must be logged-in) | GET, ; return: email, repos[]
@@ -32,17 +34,19 @@ def addRoutes():
     api.add_resource(ConsultantAreaAddController, "/addconsultantarea")
     api.add_resource(ConsultantSubAreaAddController, "/addconsultantsubarea") 
     api.add_resource(ConsultantWorkTimeController, "/consultantworktime")  
-    api.add_resource(TakeAppointmentController, "/takeappointment")
+    api.add_resource(TakeAppointmentController, "/takeappointment") 
+    api.add_resource(ConsultantFreeTimeController, "/consultantfreetime")
 
 
 if __name__ == '__main__':
     addRoutes()
-
     api.init_app(app)
     jwt.init_app(app)
     ma.init_app(app)
-
     CORS(app)
-
-    
     app.run(debug=True)
+# addRoutes()
+# api.init_app(app)
+# jwt.init_app(app)
+# ma.init_app(app)
+# CORS(app)

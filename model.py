@@ -174,6 +174,13 @@ class ConsultantWorkingTimes(db.Model):
             db.session.commit()
 
     @classmethod
+    def resetConsultantWorkingTimes(cls, id):
+        with app.app_context():
+            # db.session.execute(db.select(cls).filter_by(consultantInfoId=id)).delete()
+            db.session.query(cls).filter_by(consultantInfoId=id).delete()
+            db.session.commit()
+
+    @classmethod
     def find_by_id(cls, id):
         with app.app_context():
             result = db.session.execute(db.select(cls).filter_by(consultantWorkingTimesId=id)).scalar()
