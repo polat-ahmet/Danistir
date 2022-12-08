@@ -21,6 +21,11 @@ class ConsultantSubAreaSchema(ma.SQLAlchemyAutoSchema):
       
     # area = Nested(ConsultantAreaSchema)
 
+class AppointmentSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Appointment
+        load_instance = True
+
 class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = ConsultantInfo

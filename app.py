@@ -25,7 +25,7 @@ db = SQLAlchemy(app)
 
 ## ROUTES ###
 def addRoutes():
-    from controller import UserRegister, Login, Profile, PasswordChange, ConsultantInfoController, ConsultantAreaAddController, ConsultantSubAreaAddController, ConsultantWorkTimeController, TakeAppointmentController, ConsultantFreeTimeController
+    from controller import UserRegister, Login, Profile, PasswordChange, ConsultantInfoController, ConsultantAreaAddController, ConsultantSubAreaAddController, ConsultantWorkTimeController, TakeAppointmentController, ConsultantFreeTimeController, ConsultantAppointmentsController, ClientAppointmentsController
     api.add_resource(UserRegister, "/register") #POST ,parameters: email, password ; return: message
     api.add_resource(Login, "/login") #POST ,parameters: email, password ; return: message, access_token (if success)
     api.add_resource(Profile, "/profile") #token required (must be logged-in) | GET, ; return: email, repos[]
@@ -35,7 +35,9 @@ def addRoutes():
     api.add_resource(ConsultantSubAreaAddController, "/addconsultantsubarea") 
     api.add_resource(ConsultantWorkTimeController, "/consultantworktime")  
     api.add_resource(TakeAppointmentController, "/takeappointment") 
-    api.add_resource(ConsultantFreeTimeController, "/consultantfreetime")
+    api.add_resource(ConsultantFreeTimeController, "/consultantfreetime") 
+    api.add_resource(ConsultantAppointmentsController, "/consultantappointments")
+    api.add_resource(ClientAppointmentsController, "/clientappointments")
 
 
 if __name__ == '__main__':

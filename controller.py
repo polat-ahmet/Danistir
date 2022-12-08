@@ -271,6 +271,18 @@ class ConsultantFreeTimeController(Resource):
         data = ConsultantFreeTimeController.parser.parse_args()
         user = User.find_by_id(data["consultantId"])
         if user.is_consultant:
+            workingTimes = ConsultantWorkingTimes.find_by_consultant_id(user.consultant_info.consultantInfoId)
+            consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
+            workingTimesOutput = consultantWorkingTimesSchema.dump(workingTimes)
+
+            appointments = Appointment.find_consultant_appointments_by_id(user.userId)
+            appointmentsSchema = AppointmentSchema(many=True)
+            appointmentsOutput = appointmentsSchema.dump(appointments)
+            
+            for element in workingTimesOutput:
+                print(element)
+            for element in appointmentsOutput:
+                print(element)
             return {'message': 'Consultant\'s free times'}, 200
 
         return {'message': 'User is not consultant'}, 401
@@ -281,6 +293,8 @@ class TakeAppointmentController(Resource):
     parser.add_argument('userId', type=int, help="UserId required", required=True)
     parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
     parser.add_argument('appointmentDate', type=lambda x: datetime.datetime.strptime(x,'%a %b %d %Y %H:%M:%S'), help="appointmentDate required", required=True)
+    getParser = reqparse.RequestParser()
+    getParser.add_argument('consultantId', type=int, help="consultantId required", required=True)
 
     @jwt_required()
     def post(self):
@@ -315,3 +329,34 @@ class TakeAppointmentController(Resource):
             return {'message': 'Client or Consultant Not Found'}, 404
 
         return {'message': 'Error'}, 400
+
+    
+
+class ConsultantAppointmentsController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
+
+    def get(self):
+        data = ConsultantAppointmentsController.parser.parse_args()
+        user = User.find_by_id(data["consultantId"])
+        if user.is_consultant:
+            appointments = Appointment.find_consultant_appointments_by_id(user.userId)
+            appointmentsSchema = AppointmentSchema(many=True)
+            output = appointmentsSchema.dump(appointments)
+            return jsonify(output)
+                # return {'message': 'Consultant\'s appointments'}, 200
+        return {'message': 'User is not consultant'}, 401
+
+class ClientAppointmentsController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('userId', type=int, help="UserId required", required=True)
+
+    def get(self):
+        data = ClientAppointmentsController.parser.parse_args()
+        user = User.find_by_id(data["userId"])
+        if user:
+            appointments = Appointment.find_client_appointments_by_id(user.userId)
+            appointmentsSchema = AppointmentSchema(many=True)
+            output = appointmentsSchema.dump(appointments)
+            return jsonify(output)
+        return {'message': 'User is not found'}, 401

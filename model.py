@@ -133,6 +133,17 @@ class Appointment(db.Model):
             db.session.delete(self)
             db.session.commit()
 
+    @classmethod
+    def find_consultant_appointments_by_id(cls, id):
+        with app.app_context():
+            result = db.session.query(cls).filter_by(consultantUserId=id).all()
+        return result
+    
+    @classmethod
+    def find_client_appointments_by_id(cls, id):
+        with app.app_context():
+            result = db.session.query(cls).filter_by(clientUserId=id).all()
+        return result
 
 
 class ConsultantWorkingTimes(db.Model):
@@ -176,7 +187,6 @@ class ConsultantWorkingTimes(db.Model):
     @classmethod
     def resetConsultantWorkingTimes(cls, id):
         with app.app_context():
-            # db.session.execute(db.select(cls).filter_by(consultantInfoId=id)).delete()
             db.session.query(cls).filter_by(consultantInfoId=id).delete()
             db.session.commit()
 
