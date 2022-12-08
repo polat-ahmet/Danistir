@@ -12,12 +12,15 @@ class UserRegister(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('email', type=str, help="Email is required", required=True)
     parser.add_argument('password', type=str, help="Password is required", required=True)
+    parser.add_argument('isConsultant', type=bool, help="isConsultant is required", required=True)
+    parser.add_argument('name', type=str, help="name is required", required=True)
+    parser.add_argument('surname', type=str, help="surname is required", required=True)
 
     def post(self):
         data = UserRegister.parser.parse_args()
         if User.find_by_email(data['email']):
             return {'message': 'Email has already been taken'}, 400
-        user = User(**data)
+        user = User(email=data['email'], password=data['password'], is_consultant=data['isConsultant'], first_name=data['name'], last_name=data['surname'])
         user.hash_password(data['password'])
         user.save_to_db()
         return {'message':  'User has been created successfully'}, 201

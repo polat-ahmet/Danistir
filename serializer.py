@@ -19,7 +19,7 @@ class ConsultantSubAreaSchema(ma.SQLAlchemyAutoSchema):
         # include_relationships = True
         load_instance = True
       
-    area = Nested(ConsultantAreaSchema)
+    # area = Nested(ConsultantAreaSchema)
 
 class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
