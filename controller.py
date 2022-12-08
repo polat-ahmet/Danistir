@@ -42,8 +42,8 @@ class Login(Resource):
 
 class Profile(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('first_name')
-    parser.add_argument('last_name')
+    parser.add_argument('name')
+    parser.add_argument('surname')
     #parser.add_argument('email')
     parser.add_argument('address')
     parser.add_argument('image')
@@ -58,14 +58,14 @@ class Profile(Resource):
 
 
     @jwt_required()
-    def put(self):
+    def post(self):
         data = Profile.parser.parse_args()
         current_user = get_jwt_identity()
         user = User.find_by_email(current_user)
-        if data["first_name"]:
-            user.setFirstName(data["first_name"])
-        if data["last_name"]:
-            user.setLastName(data["last_name"])
+        if data["name"]:
+            user.setFirstName(data["name"])
+        if data["surname"]:
+            user.setLastName(data["surname"])
         if data["address"]:
             user.setAddress(data["address"])
         if data["image"]:
@@ -73,7 +73,6 @@ class Profile(Resource):
     
         user.mergeAndCommit()
         return {'message':  'Profile changes updated'}, 200
-
 
 
 #change password
@@ -89,7 +88,7 @@ class PasswordChange(Resource):
         user = User.find_by_email(current_user)
 
         if not user.verify_password(data['old_password']):
-            return {'message': 'Currently Password is wrong'}, 404
+            return {'message': 'Currently Password is wrong'}, 400
         user.hash_password(data['new_password'])
         user.mergeAndCommit()
         return {'message':  'Password changed successfully'}, 200        
@@ -213,7 +212,7 @@ class ConsultantSubAreaAddController(Resource):
             # print("-------")
             # print(consultantSubArea.name)
             # print(consultantSubArea.areaId)
-            # print(consultantSubArea.area)
+            # print(consultantSubArea.area.name)
             consultantSubAreaSchema = ConsultantSubAreaSchema()
             output = consultantSubAreaSchema.dump(consultantSubArea)
             consultantArea = ConsultantArea.find_by_id(consultantSubArea.areaId)
@@ -223,6 +222,17 @@ class ConsultantSubAreaAddController(Resource):
             return {'message': output}, 200
         return {'message': 'Consultant SubArea Not Found'}, 404
 
+class ConsultantSubAreasController(Resource):
+
+    def get(self):
+        consultantSubAreas = ConsultantSubArea.getAll()
+
+        if consultantSubAreas:
+            consultantSubAreaSchema = ConsultantSubAreaSchema(many=True)
+            output = consultantSubAreaSchema.dump(consultantSubAreas)
+
+            return {'subAres': output}, 200
+        return {'message': 'Consultant SubArea Not Found'}, 404
 
 #consultant çalıştığı saatleri ayarlama
 class ConsultantWorkTimeController(Resource):
@@ -278,12 +288,13 @@ class ConsultantFreeTimeController(Resource):
             appointments = Appointment.find_consultant_appointments_by_id(user.userId)
             appointmentsSchema = AppointmentSchema(many=True)
             appointmentsOutput = appointmentsSchema.dump(appointments)
-            
+
             for element in workingTimesOutput:
                 print(element)
             for element in appointmentsOutput:
                 print(element)
-            return {'message': 'Consultant\'s free times'}, 200
+
+            return {'times': [{'start':'Mon Dec 12 2022 09:00:00 GMT+0300 (GMT+03:00)', 'end':'Mon Dec 12 2022 16:00:00 GMT+0300 (GMT+03:00)'},{'start':'Wed Dec 14 2022 11:00:00 GMT+0300 (GMT+03:00)', 'end':'Wed Dec 14 2022 14:00:00 GMT+0300 (GMT+03:00)'}]}, 200
 
         return {'message': 'User is not consultant'}, 401
 
@@ -358,5 +369,18 @@ class ClientAppointmentsController(Resource):
             appointments = Appointment.find_client_appointments_by_id(user.userId)
             appointmentsSchema = AppointmentSchema(many=True)
             output = appointmentsSchema.dump(appointments)
+            return jsonify(output)
+        return {'message': 'User is not found'}, 401
+
+class SearchController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('keyword', type=int, help="keyword required")
+
+    def get(self):
+        # data = SearchController.parser.parse_args()
+        consultants = User.getConsultants()
+        if consultants:
+            user_schema = UserSchema(many=True)
+            output = user_schema.dump(consultants)
             return jsonify(output)
         return {'message': 'User is not found'}, 401

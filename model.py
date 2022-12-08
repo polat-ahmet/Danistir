@@ -79,6 +79,12 @@ class ConsultantSubArea(db.Model):
         with app.app_context():
             db.session.delete(self)
             db.session.commit()
+    
+    @classmethod
+    def getAll(cls):
+        with app.app_context():
+            result = db.session.query(cls).all()
+        return result
 
     @classmethod
     def find_by_name(cls, name):
@@ -311,6 +317,12 @@ class User(db.Model):
             # result = db.session.query(cls).filter_by(email=email).first()
             result = db.session.execute(db.select(cls).filter_by(email=email)).scalar()
             # result = cls.query.filter_by(email=email).first()
+        return result
+    
+    @classmethod
+    def getConsultants(cls):
+        with app.app_context():
+            result = db.session.query(cls).all()
         return result
 
     @classmethod
