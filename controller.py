@@ -22,6 +22,9 @@ class UserRegister(Resource):
             return {'message': 'Email has already been taken'}, 400
         user = User(email=data['email'], password=data['password'], is_consultant=data['isConsultant'], first_name=data['name'], last_name=data['surname'])
         user.hash_password(data['password'])
+        if user.is_consultant:
+            consultant_info = ConsultantInfo(consultant=user)
+            consultant_info.addToSession()
         user.save_to_db()
         return {'message':  'User has been created successfully'}, 201
 

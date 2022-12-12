@@ -229,6 +229,10 @@ class ConsultantInfo(db.Model):
     def commit(self):
         with app.app_context():
             db.session.commit()
+    
+    def addToSession(self):
+        with app.app_context():
+            db.session.add(self)
 
     def merge(self):
         with app.app_context():
