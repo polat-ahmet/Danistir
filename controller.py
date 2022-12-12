@@ -276,6 +276,62 @@ class ConsultantWorkTimeController(Resource):
         return {'message': 'You are not consultant'}, 401
 
 
+class ConsultantServiceSettingsController(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('time', type=dict, help="required", action='append')
+    parser.add_argument('subAreas', type=dict, help="required", action='append')
+
+    @jwt_required()
+    def post(self):
+        data = ConsultantServiceSettingsController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        if user.is_consultant:
+            if data["time"]:
+                times = data["time"]
+                ConsultantWorkingTimes.resetConsultantWorkingTimes(user.consultant_info.consultantInfoId)        
+                for element in times:
+                    consultantWorkingTimesSchema = ConsultantWorkingTimesSchema()
+                    output = consultantWorkingTimesSchema.load(element)
+
+                    consultantWorking = ConsultantWorkingTimes(**output, consultantInfo=user.consultant_info)
+                    consultantWorking.save_to_db()
+            if data["subAreas"]:
+                subAreas = data["subAreas"]
+                user = User.find_by_email(current_user)
+                consultantInfo = ConsultantInfo.find_by_id_with_areas(user.consultant_info.consultantInfoId)
+                print(consultantInfo.provideSubAreas)
+                consultantInfo.resetProvideSubAreas()
+                for element in subAreas:
+                    subArea = ConsultantSubArea.find_by_id(element["consultantSubAreaId"])
+                    if subArea:
+                        consultantInfo.appendProvideSubAreas(subArea)
+                consultantInfo.mergeAndCommit()
+            return {'message': 'Consultant Service Settings Successfully Changed'}, 201
+        return {'message': 'You are not consultant'}, 401
+
+    @jwt_required()
+    def get(self):
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+
+        if user.is_consultant:
+            consultantInfo = ConsultantInfo.find_by_id_with_areas_and_working_times(user.consultant_info.consultantInfoId)
+            print(consultantInfo.provideSubAreas)
+            print(consultantInfo.workingTimes)
+            consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
+            consultantSubAreaSchema = ConsultantSubAreaSchema(many=True)
+            
+            workingTimesOutput = consultantWorkingTimesSchema.dump(consultantInfo.workingTimes)
+            subAreasOutput = consultantSubAreaSchema.dump(consultantInfo.provideSubAreas)
+            
+            return {'time': workingTimesOutput, 'subAreas':subAreasOutput, 'consultantInfoId':user.consultant_info.consultantInfoId, 'userId':user.userId}, 200
+
+        return {'message': 'You are not consultant'}, 401
+
+
+
 class ConsultantFreeTimeController(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
@@ -293,7 +349,10 @@ class ConsultantFreeTimeController(Resource):
             appointmentsOutput = appointmentsSchema.dump(appointments)
 
             for element in workingTimesOutput:
+                date_time = datetime.datetime(day=element["day"], hour=element["startHour"], minute=element["startMin"],)
                 print(element)
+                print(date_time)
+                print("----")
             for element in appointmentsOutput:
                 print(element)
 

@@ -94,6 +94,14 @@ class ConsultantSubArea(db.Model):
             # result = db.session.query(cls).filter_by(name=name).first()
             # result = cls.query.filter_by(name=name).first()
         return result
+    
+    @classmethod
+    def find_by_id(cls, _id):
+        with app.app_context():
+            result = db.session.query(cls).filter_by(consultantSubAreaId=_id).first()
+        return result
+
+
 
 
 consultantProvideSubArea = db.Table('consultant_provide_sub_area',
@@ -225,6 +233,36 @@ class ConsultantInfo(db.Model):
     
     workingTimes = db.relationship("ConsultantWorkingTimes", backref='consultantInfo', lazy='subquery')
 
+    @classmethod
+    def find_by_id(cls, _id):
+        with app.app_context():
+            result = db.session.query(cls).filter_by(consultantInfoId=_id).first()
+        return result
+    
+    @classmethod
+    def find_by_id_with_areas(cls, _id):
+        with app.app_context():
+            result = db.session.query(cls).options(db.orm.subqueryload(cls.provideSubAreas)).filter_by(consultantInfoId=_id).first()
+        return result
+    
+    @classmethod
+    def find_by_id_with_areas_and_working_times(cls, _id):
+        with app.app_context():
+            result = db.session.query(cls).options(db.orm.subqueryload(cls.provideSubAreas), db.orm.subqueryload(cls.workingTimes)).filter_by(consultantInfoId=_id).first()
+        return result
+    
+    def resetProvideSubAreas(self):
+        with app.app_context():
+            self.provideSubAreas = []
+
+    def appendProvideSubAreas(self, subArea):
+        with app.app_context():
+            self.provideSubAreas.append(subArea)
+
+    def mergeAndCommit(self):
+        with app.app_context():
+            db.session.merge(self)
+            db.session.commit()
 
     def commit(self):
         with app.app_context():
