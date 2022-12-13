@@ -19,7 +19,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'tmp/db.sqlite3') #'sqlite:///tmp\db.sqlite3' #'postgresql://ctqkjmmn:I6i392cggu_lZmzVlr7mCzcDpKmo4J0N@mouse.db.elephantsql.com/ctqkjmmn' #
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'Danistir secret key' 
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=3600)
 
 db = SQLAlchemy(app)
 
