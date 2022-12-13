@@ -364,7 +364,7 @@ class User(db.Model):
     @classmethod
     def getConsultants(cls):
         with app.app_context():
-            result = db.session.query(cls).all()
+            result = db.session.query(cls).filter_by(is_consultant=True).all()
         return result
 
     @classmethod
