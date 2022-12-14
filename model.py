@@ -114,7 +114,7 @@ class Appointment(db.Model):
     consultantUserId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
     clientUserId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
     appointmentDate = db.Column(db.DateTime, nullable=False)
-    appointmentTimeInMin = db.Column(db.Integer, db.CheckConstraint('appointmentTimeInMin >= 0'), nullable=False, default=30)
+    appointmentTimeInMin = db.Column(db.Integer, db.CheckConstraint('appointmentTimeInMin >= 0'), nullable=False, default=60)
     appointmentToken = db.Column(db.Text, nullable=False)
 
     consultant = db.relationship("User", backref="consultantAppointment", foreign_keys=[consultantUserId])

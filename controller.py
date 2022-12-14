@@ -301,10 +301,10 @@ class ConsultantServiceSettingsController(Resource):
                 subAreas = data["subAreas"]
                 user = User.find_by_email(current_user)
                 consultantInfo = ConsultantInfo.find_by_id_with_areas(user.consultant_info.consultantInfoId)
-                print(consultantInfo.provideSubAreas)
+                # print(consultantInfo.provideSubAreas)
                 consultantInfo.resetProvideSubAreas()
                 for element in subAreas:
-                    subArea = ConsultantSubArea.find_by_id(element["consultantSubAreaId"])
+                    subArea = ConsultantSubArea.find_by_name(element["name"])
                     if subArea:
                         consultantInfo.appendProvideSubAreas(subArea)
                 consultantInfo.mergeAndCommit()
@@ -318,8 +318,8 @@ class ConsultantServiceSettingsController(Resource):
 
         if user.is_consultant:
             consultantInfo = ConsultantInfo.find_by_id_with_areas_and_working_times(user.consultant_info.consultantInfoId)
-            print(consultantInfo.provideSubAreas)
-            print(consultantInfo.workingTimes)
+            # print(consultantInfo.provideSubAreas)
+            # print(consultantInfo.workingTimes)
             consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
             consultantSubAreaSchema = ConsultantSubAreaSchema(many=True)
             
@@ -330,7 +330,71 @@ class ConsultantServiceSettingsController(Resource):
 
         return {'message': 'You are not consultant'}, 401
 
+def getConsultantFreeTimes(id):
+    user = User.find_by_id(id)
+    workingTimes = ConsultantWorkingTimes.find_by_consultant_id(user.consultant_info.consultantInfoId)
+    consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
+    workingTimesOutput = consultantWorkingTimesSchema.dump(workingTimes)
 
+    appointments = Appointment.find_consultant_appointments_by_id(user.userId)
+    appointmentsSchema = AppointmentSchema(many=True)
+    appointmentsOutput = appointmentsSchema.dump(appointments)
+
+    print(workingTimesOutput)
+    print("--appointments--", appointmentsOutput)
+    timeDictList = []
+
+    j = 0
+    while workingTimesOutput and j<len(workingTimesOutput):
+            # for element in workingTimesOutput:
+        element = workingTimesOutput[j]
+        today = datetime.datetime.now()
+        dateTime = today + datetime.timedelta( (element["day"]-today.weekday()) % 7 )
+
+        startDateTime = dateTime.replace(hour=element["startHour"], minute=element["startMin"], second=0, microsecond=0)
+        endDateTime = dateTime.replace(hour=element["endHour"], minute=element["endMin"], second=0, microsecond=0)    
+              
+        flag = False
+        for i in appointmentsOutput:
+            appointmentDate = datetime.datetime.strptime(i["appointmentDate"],'%Y-%m-%dT%H:%M:%S')
+            if appointmentDate >= startDateTime and appointmentDate < endDateTime:
+                print("----", element)
+                print("---appointmentDate--", appointmentDate)
+                if (appointmentDate.hour > startDateTime.hour and appointmentDate.hour+1 < endDateTime.hour):
+                    tempElement = element.copy()
+                    tempElement["endHour"] = appointmentDate.hour
+                    print("---temp11----", tempElement)
+                    workingTimesOutput.append(tempElement)
+
+                    tempElement = element
+                    tempElement["startHour"] = appointmentDate.hour+1
+                    print("---temp22----", tempElement)
+                    workingTimesOutput.append(tempElement)                           
+                elif (appointmentDate.hour > startDateTime.hour and appointmentDate.hour+1 == endDateTime.hour):
+                    tempElement = element.copy()
+                    tempElement["endHour"] = appointmentDate.hour
+                    print("---temp33----", tempElement)
+                    workingTimesOutput.append(tempElement)
+                elif (appointmentDate.hour == startDateTime.hour and appointmentDate.hour+1 < endDateTime.hour):
+                    tempElement = element
+                    tempElement["startHour"] = appointmentDate.hour+1
+                    print("---temp44----", tempElement)
+                    workingTimesOutput.append(tempElement)                            
+                        # workingTimesOutput.remove(element)
+                flag = True
+        if not flag:
+            startDateString = startDateTime.strftime('%a %b %d %Y %H:%M:%S')
+            endDateString = endDateTime.strftime('%a %b %d %Y %H:%M:%S')
+
+            startDateString +=' GMT+0300 (GMT+03:00)'
+            endDateString +=' GMT+0300 (GMT+03:00)'
+            timeDict = {'start':startDateString, 'end':endDateString}
+            timeDictList.append(timeDict)
+        j+=1
+    print("--",timeDictList)
+    print("-+-",workingTimesOutput)
+
+    return timeDictList
 
 class ConsultantFreeTimeController(Resource):
     parser = reqparse.RequestParser()
@@ -340,23 +404,8 @@ class ConsultantFreeTimeController(Resource):
         data = ConsultantFreeTimeController.parser.parse_args()
         user = User.find_by_id(data["consultantId"])
         if user.is_consultant:
-            workingTimes = ConsultantWorkingTimes.find_by_consultant_id(user.consultant_info.consultantInfoId)
-            consultantWorkingTimesSchema = ConsultantWorkingTimesSchema(many=True)
-            workingTimesOutput = consultantWorkingTimesSchema.dump(workingTimes)
-
-            appointments = Appointment.find_consultant_appointments_by_id(user.userId)
-            appointmentsSchema = AppointmentSchema(many=True)
-            appointmentsOutput = appointmentsSchema.dump(appointments)
-
-            for element in workingTimesOutput:
-                date_time = datetime.datetime(day=element["day"], hour=element["startHour"], minute=element["startMin"],)
-                print(element)
-                print(date_time)
-                print("----")
-            for element in appointmentsOutput:
-                print(element)
-
-            return {'times': [{'start':'Mon Dec 12 2022 09:00:00 GMT+0300 (GMT+03:00)', 'end':'Mon Dec 12 2022 16:00:00 GMT+0300 (GMT+03:00)'},{'start':'Wed Dec 14 2022 11:00:00 GMT+0300 (GMT+03:00)', 'end':'Wed Dec 14 2022 14:00:00 GMT+0300 (GMT+03:00)'}]}, 200
+            result = getConsultantFreeTimes(data["consultantId"])
+            return {'freeTimes':result}, 200
 
         return {'message': 'User is not consultant'}, 401
 
@@ -434,15 +483,20 @@ class ClientAppointmentsController(Resource):
             return jsonify(output)
         return {'message': 'User is not found'}, 401
 
+#TODO keyworda gore search yap
 class SearchController(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('keyword', type=int, help="keyword required")
+    parser.add_argument('searchWord', type=int, help="searchWord required")
 
     def get(self):
-        # data = SearchController.parser.parse_args()
         consultants = User.getConsultants()
         if consultants:
             user_schema = UserSchema(many=True)
             output = user_schema.dump(consultants)
+            # print(output)
+            for i in output:
+                print(i)
+                result = getConsultantFreeTimes(i["userId"])
+                i["consultant_info"]["freeTimes"] = result
             return jsonify(output)
-        return {'message': 'User is not found'}, 401
+        return {'message': 'Consultant is not found'}, 404
