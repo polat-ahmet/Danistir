@@ -158,6 +158,12 @@ class Appointment(db.Model):
         with app.app_context():
             result = db.session.query(cls).filter_by(clientUserId=id).all()
         return result
+    
+    @classmethod
+    def find_by_id(cls, id):
+        with app.app_context():
+            result = db.session.query(cls).filter_by(appointmentId=id).first()
+        return result
 
 
 class ConsultantWorkingTimes(db.Model):

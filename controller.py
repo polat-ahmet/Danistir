@@ -468,6 +468,20 @@ class ConsultantAppointmentsController(Resource):
             appointments = Appointment.find_consultant_appointments_by_id(user.userId)
             appointmentsSchema = AppointmentSchema(many=True)
             output = appointmentsSchema.dump(appointments)
+            for i in output:
+                date = datetime.datetime.strptime(i["appointmentDate"],'%Y-%m-%dT%H:%M:%S')
+                appointmentDate = date.strftime('%a %b %d %Y %H:%M:%S')
+                i["appointmentDate"]=appointmentDate
+
+                appointment = Appointment.find_by_id(i["appointmentId"])
+                client = User.find_by_id(appointment.clientUserId)
+                if client.first_name:
+                    name = client.first_name + " " + client.last_name
+                    i["name"]=name
+                else:
+                    i["name"]="danışman"
+                i["isPast"]=False
+                print(i)
             return jsonify(output)
                 # return {'message': 'Consultant\'s appointments'}, 200
         return {'message': 'User is not consultant'}, 401
@@ -486,6 +500,20 @@ class ClientAppointmentsController(Resource):
             appointments = Appointment.find_client_appointments_by_id(user.userId)
             appointmentsSchema = AppointmentSchema(many=True)
             output = appointmentsSchema.dump(appointments)
+            for i in output:
+                date = datetime.datetime.strptime(i["appointmentDate"],'%Y-%m-%dT%H:%M:%S')
+                appointmentDate = date.strftime('%a %b %d %Y %H:%M:%S')
+                i["appointmentDate"]=appointmentDate
+
+                appointment = Appointment.find_by_id(i["appointmentId"])
+                consultant = User.find_by_id(appointment.consultantUserId)
+                if consultant.first_name:
+                    name = consultant.first_name + " " + consultant.last_name
+                    i["name"]=name
+                else:
+                    i["name"]="danışman"
+                i["isPast"]=False
+                print(i)
             return jsonify(output)
         return {'message': 'User is not found'}, 401
 
