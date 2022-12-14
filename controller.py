@@ -430,7 +430,9 @@ class TakeAppointmentController(Resource):
             import time      
             appID = "651567b3ecc3473e806ec776ae53781a"
             appCertificate = "4e6c5235d5ee47a2941589c3ea7c945b"
-            channelName = "danistirchannel"
+            import random
+            channel = random.randint(1, 10000000)
+            channelName = str(channel)
             uid = 0
             expireTimeInSeconds = 36000000
             currentTimestamp = int(time.time())
@@ -445,7 +447,7 @@ class TakeAppointmentController(Resource):
             client = User.find_by_id(user.userId)
             consultant = User.find_by_id(data["consultantId"])
             if client and consultant:
-                appointment = Appointment(consultantUserId=consultant.userId, clientUserId=client.userId, appointmentDate=appointmentDate, appointmentToken=appointmentToken)
+                appointment = Appointment(consultantUserId=consultant.userId, clientUserId=client.userId, appointmentDate=appointmentDate, appointmentToken=appointmentToken, channelName=channelName)
                 appointment.save_to_db()
                 return {'message': 'Appointment successfully take'}, 201
             return {'message': 'Client or Consultant Not Found'}, 404
