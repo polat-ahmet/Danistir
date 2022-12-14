@@ -412,7 +412,7 @@ class ConsultantFreeTimeController(Resource):
 #appointment alma 
 class TakeAppointmentController(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('userId', type=int, help="UserId required", required=True)
+    parser.add_argument('userId', type=int, help="UserId required")
     parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
     parser.add_argument('appointmentDate', type=lambda x: datetime.datetime.strptime(x,'%a %b %d %Y %H:%M:%S'), help="appointmentDate required", required=True)
     getParser = reqparse.RequestParser()
@@ -442,7 +442,7 @@ class TakeAppointmentController(Resource):
             
             print(data["appointmentDate"])
             appointmentDate = data["appointmentDate"]
-            client = User.find_by_id(data["userId"])
+            client = User.find_by_id(user.userId)
             consultant = User.find_by_id(data["consultantId"])
             if client and consultant:
                 appointment = Appointment(consultantUserId=consultant.userId, clientUserId=client.userId, appointmentDate=appointmentDate, appointmentToken=appointmentToken)
@@ -456,11 +456,14 @@ class TakeAppointmentController(Resource):
 
 class ConsultantAppointmentsController(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('consultantId', type=int, help="ConsultantId required", required=True)
+    parser.add_argument('consultantId', type=int, help="ConsultantId required")
 
+    @jwt_required()
     def get(self):
-        data = ConsultantAppointmentsController.parser.parse_args()
-        user = User.find_by_id(data["consultantId"])
+        # data = ConsultantAppointmentsController.parser.parse_args()
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
+        # user = User.find_by_id(data["consultantId"])
         if user.is_consultant:
             appointments = Appointment.find_consultant_appointments_by_id(user.userId)
             appointmentsSchema = AppointmentSchema(many=True)
@@ -473,9 +476,12 @@ class ClientAppointmentsController(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('userId', type=int, help="UserId required", required=True)
 
+    @jwt_required()
     def get(self):
-        data = ClientAppointmentsController.parser.parse_args()
-        user = User.find_by_id(data["userId"])
+        # data = ClientAppointmentsController.parser.parse_args()
+        # user = User.find_by_id(data["userId"])
+        current_user = get_jwt_identity()
+        user = User.find_by_email(current_user)
         if user:
             appointments = Appointment.find_client_appointments_by_id(user.userId)
             appointmentsSchema = AppointmentSchema(many=True)

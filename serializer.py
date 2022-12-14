@@ -25,6 +25,7 @@ class AppointmentSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Appointment
         load_instance = True
+        exclude = ("appointmentToken",)
 
 class ConsultantInfoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
